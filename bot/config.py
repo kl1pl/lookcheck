@@ -39,6 +39,10 @@ class Settings:
     # Wildberries: токен партнёра (для live-режима)
     wb_api_token: str = os.getenv("WB_API_TOKEN", "")
 
+    # AliExpress Open Platform (физлицу без ИНН): ключи приложения
+    ae_app_key: str = os.getenv("AE_APP_KEY", "")
+    ae_app_secret: str = os.getenv("AE_APP_SECRET", "")
+
     # Управление частотои запросов (защита от спама)
     daily_limit_free: int = _env_int("DAILY_LIMIT_FREE", 8)
     premium_daily_limit: int = _env_int("PREMIUM_DAILY_LIMIT", 1000)

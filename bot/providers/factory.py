@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..config import settings
 from .base import BaseProvider
+from .aliexpress import AliExpressProvider
 from .demo import DemoProvider
 from .ozon import OzonProvider
 from .wb import WildberriesProvider
@@ -20,4 +21,6 @@ def build_providers() -> dict[str, BaseProvider]:
                 providers["wb"] = WildberriesProvider()
             elif market == "ozon":
                 providers["ozon"] = OzonProvider()
+            elif market == "aliexpress":
+                providers["aliexpress"] = AliExpressProvider()
     return providers

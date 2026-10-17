@@ -70,7 +70,7 @@ async def cmd_grant(message: Message) -> None:
         return
     arg = (message.text or "").removeprefix("/grant").strip()
     if not arg.isdigit():
-        await message.answer("Использование: /grant <user_id>")
+        await message.answer("Использование: /grant &lt;user_id&gt;")
         return
     user_id = int(arg)
     await _db.create_user(user_id)
@@ -88,7 +88,7 @@ async def cmd_revoke(message: Message) -> None:
         return
     arg = (message.text or "").removeprefix("/revoke").strip()
     if not arg.isdigit():
-        await message.answer("Использование: /revoke <user_id>")
+        await message.answer("Использование: /revoke &lt;user_id&gt;")
         return
     user_id = int(arg)
     await _db.set_premium(user_id, False)

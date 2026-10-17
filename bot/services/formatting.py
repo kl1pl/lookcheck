@@ -20,6 +20,24 @@ def _fmt_price(price: int) -> str:
     return f"{price:,}".replace(",", " ") + "₽"
 
 
+def format_sources_status(is_demo: bool, configured: dict[str, bool]) -> str:
+    """Честная маркировка источников: какие площадки реально подключены.
+
+    configured: {market_label: bool} — True, если у провайдера есть ключи/доступ.
+    """
+    if is_demo:
+        return (
+            "🪙 <b>Режим демо:</b> цены учебные.\n"
+            "Для реальных цен нужны ключи маркетплейсов (см. KEYS.md)."
+        )
+
+    missing = [name for name, ok in configured.items() if not ok]
+    if not missing:
+        return ""
+    names = ", ".join(missing)
+    return f"⚠️ <b>Нет доступа к:</b> {names}. Цены по ним не показываются."
+
+
 def _offer_line(offer: Offer) -> str:
     emoji = MARKET_EMOJI.get(offer.market, "🛒")
     parts = [f"{emoji} {offer.market_label}: {_fmt_price(offer.price)}"]
@@ -51,12 +69,15 @@ def _offer_line(offer: Offer) -> str:
     return line
 
 
-def format_search_result(result: SearchResult, query: str) -> str:
+def format_search_result(result: SearchResult, query: str, sources_note: str = "") -> str:
     if result.empty:
-        return (
+        text = (
             f"🔍 По запросу «{query}» ничего не найдено.\n"
             "Попробуйте изменить формулировку или проверьте позже."
         )
+        if sources_note:
+            text += "\n\n" + sources_note
+        return text
 
     lines: list[str] = [f"🔍 Результаты поиска: «{query}»\n"]
     for idx, product in enumerate(result.products[:3], start=1):
@@ -100,7 +121,10 @@ def format_search_result(result: SearchResult, query: str) -> str:
             lines.append(video_block)
 
         lines.append("")
-    return "\n".join(lines).strip()
+    text = "\n".join(lines).strip()
+    if sources_note:
+        text += "\n\n" + sources_note
+    return text
 
 
 def _video_block(offer: Offer) -> str:

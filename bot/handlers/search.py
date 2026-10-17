@@ -10,7 +10,7 @@ from aiogram.types import Message
 
 from ..config import settings
 from ..db import Database, DemoDatabase
-from ..services.formatting import format_promos, format_savings, format_search_result
+from ..services.formatting import format_promos, format_savings, format_search_result, format_sources_status
 from ..services.limits import QueryQuota, RateLimiter
 from ..services.search import SearchService
 
@@ -33,6 +33,22 @@ def init_router(
 ) -> None:
     global _search, _db, _quota, _limiter
     _search, _db, _quota, _limiter = search, db, quota, limiter
+
+
+def _sources_note() -> str:
+    """Пометка о реальных источниках цен (демо или отсутствие ключей)."""
+    from ..config import settings as s
+
+    if _search is None:
+        return ""
+    if s.is_demo:
+        return format_sources_status(is_demo=True, configured={})
+    configured: dict[str, bool] = {}
+    for market, provider in _search.providers.items():
+        label = getattr(provider, "label", market)
+        ok = bool(getattr(provider, "configured", False))
+        configured[label] = ok
+    return format_sources_status(is_demo=False, configured=configured)
 
 
 @router.message(CommandStart())
@@ -121,7 +137,7 @@ async def _do_search(message: Message, query: str) -> None:
     status = await message.answer(f"🔎 Ищу «{query}» на маркетплейсах…")
     try:
         result = await _search.search(query)
-        text = format_search_result(result, query)
+        text = format_search_result(result, query, sources_note=_sources_note())
         await status.edit_text(text)
         await _quota.consume(user_id)
         # Статистика экономии: фиксируем выгоды из выдачи
@@ -173,7 +189,7 @@ async def photo_search(message: Message) -> None:
         query, result = await _search.search_by_image(await image_bytes.read())
         text = (
             f"🖼 <b>Распознанный запрос:</b> {query}\n\n"
-            + format_search_result(result, query)
+            + format_search_result(result, query, sources_note=_sources_note())
         )
         await status.edit_text(text)
         await _quota.consume(user_id)

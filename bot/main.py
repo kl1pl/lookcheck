@@ -8,6 +8,7 @@ import os
 
 from aiohttp import web
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 
 from .config import settings
 from .db import create_database
@@ -46,7 +47,7 @@ async def main() -> None:
         log.error("Не задан BOT_TOKEN. Скопируйте .env.example в .env и укажите токен.")
         return
 
-    bot = Bot(token=settings.token, parse_mode="HTML")
+    bot = Bot(token=settings.token, default=DefaultBotProperties(parse_mode="HTML"))
     dp = Dispatcher()
 
     db = await create_database()

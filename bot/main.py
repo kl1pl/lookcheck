@@ -14,6 +14,7 @@ from .config import settings
 from .db import create_database
 from .handlers import favorites, premium, search
 from .providers.factory import build_providers
+from .services.limits import QueryQuota, RateLimiter
 from .services.search import SearchService
 from .services.vision import build_recognizer
 from .services.watcher import PriceWatcher

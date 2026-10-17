@@ -17,9 +17,14 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def _env_token(name: str) -> str:
+    """Токен из окружения с защитой от пробелов/переносов строк."""
+    return os.getenv(name, "").strip()
+
+
 @dataclass(frozen=True)
 class Settings:
-    token: str = os.getenv("BOT_TOKEN", "")
+    token: str = _env_token("BOT_TOKEN")
 
     # БД: real -> PostgreSQL/SQLite через aiosqlite; demo -> полностью в памяти
     database_url: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///data/bot.db")

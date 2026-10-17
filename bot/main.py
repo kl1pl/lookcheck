@@ -27,8 +27,35 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 
+WEBAPP_HTML = None
+
+
+def _load_webapp_html() -> str:
+    """Читает мини-апп (webapp/index.html) из файла рядом с проектом."""
+    global WEBAPP_HTML
+    if WEBAPP_HTML is not None:
+        return WEBAPP_HTML
+    here = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(os.path.dirname(here), "webapp", "index.html")
+    if not os.path.exists(path):
+        path = os.path.join(here, "webapp", "index.html")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            WEBAPP_HTML = f.read()
+    except OSError as exc:
+        log.warning("Не найден мини-апп (%s): %s", path, exc)
+        WEBAPP_HTML = "<h1>LookCheck mini-app</h1>"
+    return WEBAPP_HTML
+
+
+async def _root(_request: web.Request) -> web.Response:
+    """Главная страница — мини-апп (Telegram WebApp)."""
+    html = _load_webapp_html()
+    return web.Response(text=html, content_type="text/html; charset=utf-8")
+
+
 async def _health(_request: web.Request) -> web.Response:
-    """Пустышка для healthcheck Render: сервис должен слушать PORT."""
+    """Healthcheck для Render."""
     return web.Response(text="ok")
 
 
@@ -36,7 +63,8 @@ async def _run_http_server() -> None:
     """HTTP-сервер на порту PORT (Render) или 8080 — иначе платформа убивает процесс."""
     port = int(os.getenv("PORT", "8080"))
     app = web.Application()
-    app.router.add_get("/", _health)
+    app.router.add_get("/", _root)
+    app.router.add_get("/healthz", _health)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)

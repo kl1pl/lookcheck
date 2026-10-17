@@ -53,7 +53,7 @@ class Settings:
     price_watch_interval_min: int = _env_int("PRICE_WATCH_INTERVAL_MIN", 30)
 
     # URL мини-аппа (Telegram WebApp) — кнопка меню в боте
-    webapp_url: str = os.getenv("WEBAPP_URL", "https://kl1pl.github.io/lookcheck/webapp/")
+    webapp_url: str = os.getenv("WEBAPP_URL", "https://lookcheck-1.onrender.com/")
 
     # Поддерживаемые рынки
     supported_markets: tuple[str, ...] = ("wb", "ozon")

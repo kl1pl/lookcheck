@@ -16,3 +16,14 @@ services:
         value: "8"
       - key: SEARCH_CACHE_TTL
         value: "600"
+      - key: WEBAPP_URL
+        value: https://lookcheck-webapp.onrender.com/
+
+  # Статический хостинг мини-аппа (Telegram WebApp)
+  - type: web
+    name: lookcheck-webapp
+    runtime: static
+    plan: free
+    buildCommand: ""
+    staticPublishPath: ./webapp
+    envVars: []

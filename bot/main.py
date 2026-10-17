@@ -59,12 +59,60 @@ async def _health(_request: web.Request) -> web.Response:
     return web.Response(text="ok")
 
 
+async def _probe(_request: web.Request) -> web.Response:
+    """Временная диагностика: доступны ли API WB/Ozon с сервера Render."""
+    import aiohttp
+
+    out = {}
+    UA = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+    }
+    async with aiohttp.ClientSession() as s:
+        try:
+            async with s.get(
+                "https://search.wb.ru/exactmatch/ru/common/v9/search",
+                params={
+                    "query": "наушники", "page": 1, "appType": 1, "curr": "rub",
+                    "lang": "ru", "dest": -1257786, "resultset": "catalog",
+                },
+                headers=UA, timeout=aiohttp.ClientTimeout(total=15),
+            ) as r:
+                body = await r.text()
+                ok = r.status == 200 and "products" in body
+                out["wb_search"] = {"status": r.status, "products_found": ok}
+        except Exception as exc:  # noqa: BLE001
+            out["wb_search"] = {"error": str(exc)[:160]}
+
+        try:
+            async with s.get(
+                "https://card.wb.ru/cards/v2/detail",
+                params={"nm": "153011213", "appType": 1, "curr": "rub", "dest": -1257786, "spp": 30},
+                headers=UA, timeout=aiohttp.ClientTimeout(total=15),
+            ) as r:
+                out["wb_card"] = {"status": r.status}
+        except Exception as exc:  # noqa: BLE001
+            out["wb_card"] = {"error": str(exc)[:160]}
+
+        try:
+            async with s.get("https://api-seller.ozon.ru/v1/product/list",
+                             headers={"Client-Id": "0", "Api-Key": "0"},
+                             timeout=aiohttp.ClientTimeout(total=15)) as r:
+                out["ozon_seller"] = {"status": r.status}
+        except Exception as exc:  # noqa: BLE001
+            out["ozon_seller"] = {"error": str(exc)[:160]}
+
+    import json
+
+    return web.Response(text=json.dumps(out, ensure_ascii=False), content_type="application/json")
+
+
 async def _run_http_server() -> None:
     """HTTP-сервер на порту PORT (Render) или 8080 — иначе платформа убивает процесс."""
     port = int(os.getenv("PORT", "8080"))
     app = web.Application()
     app.router.add_get("/", _root)
     app.router.add_get("/healthz", _health)
+    app.router.add_get("/probe", _probe)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)

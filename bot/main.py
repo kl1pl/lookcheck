@@ -51,7 +51,7 @@ def _load_webapp_html() -> str:
 async def _root(_request: web.Request) -> web.Response:
     """Главная страница — мини-апп (Telegram WebApp)."""
     html = _load_webapp_html()
-    return web.Response(text=html, content_type="text/html; charset=utf-8")
+    return web.Response(text=html, content_type="text/html", charset="utf-8")
 
 
 async def _health(_request: web.Request) -> web.Response:

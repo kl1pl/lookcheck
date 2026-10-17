@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 
+from aiohttp import web
 from aiogram import Bot, Dispatcher
 
 from .config import settings
@@ -20,6 +22,23 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 )
 log = logging.getLogger(__name__)
+
+
+async def _health(_request: web.Request) -> web.Response:
+    """Пустышка для healthcheck Render: сервис должен слушать PORT."""
+    return web.Response(text="ok")
+
+
+async def _run_http_server() -> None:
+    """HTTP-сервер на порту PORT (Render) или 8080 — иначе платформа убивает процесс."""
+    port = int(os.getenv("PORT", "8080"))
+    app = web.Application()
+    app.router.add_get("/", _health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    log.info("HTTP healthcheck запущен на порту %s", port)
 
 
 async def main() -> None:
@@ -56,6 +75,7 @@ async def main() -> None:
     watcher = PriceWatcher(bot, db, providers)
 
     try:
+        await _run_http_server()
         await watcher.start()
         await bot.delete_webhook(drop_pending_updates=True)
         log.info("Бот запущен. Имя: @%s", (await bot.me()).username)

@@ -9,6 +9,7 @@ import os
 from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.types import MenuButtonWebApp, WebAppInfo
 
 from .config import settings
 from .db import create_database
@@ -80,6 +81,17 @@ async def main() -> None:
         await _run_http_server()
         await watcher.start()
         await bot.delete_webhook(drop_pending_updates=True)
+        # Кнопка меню «Мини-апп» под полем ввода
+        try:
+            await bot.set_chat_menu_button(
+                menu_button=MenuButtonWebApp(
+                    text="🎛 Мини-апп",
+                    web_app=WebAppInfo(url=settings.webapp_url),
+                )
+            )
+            log.info("Кнопка мини-аппа установлена на %s", settings.webapp_url)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("Не удалось установить кнопку мини-аппа: %s", exc)
         log.info("Бот запущен. Имя: @%s", (await bot.me()).username)
         await dp.start_polling(bot)
     finally:

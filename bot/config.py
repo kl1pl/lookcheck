@@ -52,6 +52,9 @@ class Settings:
     # Расписание фонового трекера цен (каждые N минут)
     price_watch_interval_min: int = _env_int("PRICE_WATCH_INTERVAL_MIN", 30)
 
+    # URL мини-аппа (Telegram WebApp) — кнопка меню в боте
+    webapp_url: str = os.getenv("WEBAPP_URL", "https://kl1pl.github.io/lookcheck/webapp/")
+
     # Поддерживаемые рынки
     supported_markets: tuple[str, ...] = ("wb", "ozon")
 

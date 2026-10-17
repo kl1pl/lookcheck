@@ -36,6 +36,9 @@ class Settings:
     ozon_client_id: str = os.getenv("OZON_CLIENT_ID", "")
     ozon_api_key: str = os.getenv("OZON_API_KEY", "")
 
+    # Wildberries: токен партнёра (для live-режима)
+    wb_api_token: str = os.getenv("WB_API_TOKEN", "")
+
     # Управление частотои запросов (защита от спама)
     daily_limit_free: int = _env_int("DAILY_LIMIT_FREE", 8)
     premium_daily_limit: int = _env_int("PREMIUM_DAILY_LIMIT", 1000)

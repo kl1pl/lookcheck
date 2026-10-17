@@ -81,11 +81,14 @@ class OzonProvider(BaseProvider):
 
     async def search(self, query: str, limit: int = 5) -> list[Offer]:
         offers: list[Offer] = []
-        # Ozon Seller API не имеет полнотекстового поиска по каталогу «как покупатель».
-        # Здесь мы форвардим запрос на список товаров продавца; для покупательского
-        # поиска необходимо партнёрство (данный метод — заглушка-пример).
-        # Если API не настроен — тихо возвращаем пустой список, чтобы бот работал
-        # с остальными площадками.
+        # Ozon Seller API: поиск по каталогу продавца (полнотекстового
+        # покупательского поиска у API нет — это ограничение платформы).
+        # Работает только с ключами; без них — пустой список, бот продолжает
+        # работать с остальными площадками.
+        if not self.configured:
+            log.warning("Ozon: не заданы OZON_CLIENT_ID/OZON_API_KEY — live-поиск недоступен")
+            return []
+
         try:
             data = await self._post(
                 SEARCH_URL,
@@ -93,10 +96,13 @@ class OzonProvider(BaseProvider):
             )
             items = data.get("result", {}).get("items", []) or []
             for it in items[:limit]:
+                price = int(it.get("price") or 0)
+                if not price:
+                    continue
                 offers.append(
                     Offer(
                         title=it.get("name") or "",
-                        price=int(it.get("price") or 0),
+                        price=price,
                         old_price=int(it.get("old_price")) if it.get("old_price") else None,
                         url=_ozon_url(it.get("offer_id", "")),
                         market=self.market,
